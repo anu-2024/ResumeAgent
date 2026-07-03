@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Resume Agent — Execution Plan v2 (Updated)</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8f7f4; color: #1a1a1a; padding: 40px 24px; min-height: 100vh; }
+.wrap { max-width: 800px; margin: 0 auto; }
+
+.page-title { font-size: 22px; font-weight: 500; text-align: center; margin-bottom: 4px; }
+.page-sub { font-size: 13px; color: #888; text-align: center; margin-bottom: 8px; }
+.version-badge { display: inline-block; background: #f0fdf4; border: 1px solid #86efac; color: #15803d; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; margin-bottom: 28px; }
+.page-header { text-align: center; }
+
+/* Metrics */
+.metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 28px; }
+@media(max-width:600px){ .metrics { grid-template-columns: 1fr 1fr; } }
+.metric-card { background: #fff; border: 1px solid #e5e3db; border-radius: 12px; padding: 14px 16px; }
+.metric-label { font-size: 12px; color: #888; margin-bottom: 4px; }
+.metric-val { font-size: 18px; font-weight: 500; }
+
+/* Phase pills */
+.phase-pills { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
+.pill { padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 500; border: 1px solid #e5e3db; background: #fff; cursor: pointer; color: #555; transition: all 0.15s; }
+.pill:hover { border-color: #4f46e5; color: #4f46e5; }
+.pill.active { background: #4f46e5; color: #fff; border-color: #4f46e5; }
+
+/* Phase panel */
+.phase-panel { display: none; }
+.phase-panel.active { display: block; }
+.phase-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.phase-tag { background: #eef2ff; color: #4f46e5; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 20px; white-space: nowrap; }
+.phase-title { font-size: 22px; font-weight: 500; }
+
+/* Steps */
+.steps { display: flex; flex-direction: column; gap: 10px; }
+.step { background: #fff; border: 1px solid #e5e3db; border-radius: 12px; overflow: hidden; }
+.step-header { display: flex; align-items: center; gap: 14px; padding: 16px 20px; cursor: pointer; user-select: none; }
+.step-header:hover { background: #fafaf8; }
+.step-num { width: 26px; height: 26px; border-radius: 50%; background: #f1efe8; color: #555; font-size: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.step-name { flex: 1; font-size: 15px; font-weight: 500; }
+.step-toggle { width: 30px; height: 30px; border-radius: 50%; background: #f1efe8; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: transform 0.2s; font-size: 14px; color: #555; }
+.step.open .step-toggle { transform: rotate(180deg); }
+.step-body { display: none; padding: 0 20px 18px 60px; border-top: 1px solid #f1efe8; }
+.step.open .step-body { display: block; padding-top: 14px; }
+.step-desc { font-size: 13px; color: #555; line-height: 1.7; margin-bottom: 12px; }
+
+/* Fix badge */
+.fix-badge { display: inline-block; background: #fef2f2; border: 1px solid #fca5a5; color: #b91c1c; font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 10px; margin-left: 8px; }
+.new-badge { display: inline-block; background: #f0fdf4; border: 1px solid #86efac; color: #15803d; font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 10px; margin-left: 8px; }
+.warn-badge { display: inline-block; background: #fffbeb; border: 1px solid #fcd34d; color: #92400e; font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 10px; margin-left: 8px; }
+
+/* Code */
+.code { background: #1e1e2e; color: #cdd6f4; border-radius: 8px; padding: 14px 16px; font-family: 'Courier New', monospace; font-size: 12px; line-height: 1.8; overflow-x: auto; margin: 10px 0; white-space: pre; }
+.code .cm { color: #6c7086; }
+.code .kw { color: #cba6f7; }
+.code .st { color: #a6e3a1; }
+.code .fn { color: #89b4fa; }
+.code .err { color: #f38ba8; }
+.code .ok  { color: #a6e3a1; }
+
+/* File path */
+.filepath { display: inline-block; background: #f1efe8; color: #5f5e5a; font-size: 12px; font-family: monospace; padding: 3px 8px; border-radius: 6px; margin-bottom: 8px; }
+
+/* Tip / warning / fix */
+.tip  { background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 10px 14px; font-size: 12px; color: #78350f; margin-top: 10px; }
+.info { background: #eef2ff; border: 1px solid #c7d2fe; border-radius: 8px; padding: 10px 14px; font-size: 12px; color: #3730a3; margin-top: 10px; }
+.fix  { background: #fef2f2; border: 1px solid #fca5a5; border-radius: 8px; padding: 10px 14px; font-size: 12px; color: #991b1b; margin-top: 10px; }
+.ok   { background: #f0fdf4; border: 1px solid #86efac; border-radius: 8px; padding: 10px 14px; font-size: 12px; color: #14532d; margin-top: 10px; }
+
+/* Tags */
+.tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.tag { font-size: 11px; font-weight: 500; padding: 3px 9px; border-radius: 20px; }
+.tag-blue  { background: #eef2ff; color: #3730a3; }
+.tag-green { background: #f0fdf4; color: #15803d; }
+.tag-amber { background: #fffbeb; color: #92400e; }
+.tag-gray  { background: #f1efe8; color: #5f5e5a; }
+.tag-red   { background: #fef2f2; color: #991b1b; }
+
+/* Checklist */
+.checklist { list-style: none; margin-top: 8px; }
+.checklist li { font-size: 13px; color: #444; padding: 3px 0; display: flex; gap: 8px; line-height: 1.5; }
+.checklist li::before { content: '✓'; color: #16a34a; font-weight: 700; flex-shrink: 0; }
+
+.section-divider { border: none; border-top: 1px solid #e5e3db; margin: 16px 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="page-header">
+  <div class="page-title">AI Resume Builder — Execution Plan</div>
+  <div class="page-sub">Updated with all corrections from the live workshop session</div>
+  <div class="version-badge">v2.0 — Working Code · Groq + LangGraph + Streamlit</div>
+</div>
+
+<!-- Metrics -->
+<div class="metrics">
+  <div class="metric-card"><div class="metric-label">Total phases</div><div class="metric-val">8 phases</div></div>
+  <div class="metric-card"><div class="metric-label">Primary LLM</div><div class="metric-val">Groq</div></div>
+  <div class="metric-card"><div class="metric-label">Model</div><div class="metric-val">Llama 3.1</div></div>
+  <div class="metric-card"><div class="metric-label">UI</div><div class="metric-val">app1.py</div></div>
+</div>
+
+<!-- Phase pills -->
+<div class="phase-pills">
+  <button class="pill active" onclick="showPhase(0,this)">Phase 1</button>
+  <button class="pill" onclick="showPhase(1,this)">Phase 2</button>
+  <button class="pill" onclick="showPhase(2,this)">Phase 3</button>
+  <button class="pill" onclick="showPhase(3,this)">Phase 4</button>
+  <button class="pill" onclick="showPhase(4,this)">Phase 5</button>
+  <button class="pill" onclick="showPhase(5,this)">Phase 6</button>
+  <button class="pill" onclick="showPhase(6,this)">Phase 7</button>
+  <button class="pill" onclick="showPhase(7,this)">Phase 8</button>
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!-- PHASE 1 -->
+<!-- ══════════════════════════════════════════ -->
+<div class="phase-panel active" id="phase-0">
+  <div class="phase-header"><span class="phase-tag">Phase 1</span><span class="phase-title">Project setup & folder structure</span></div>
+  <div class="steps">
+
+    <div class="step" onclick="toggle(this)">
+      <div class="step-header"><div class="step-num">1</div><div class="step-name">Create project folder <span class="fix-badge">Windows fix</span></div><div class="step-toggle">↓</div></div>
+      <div class="step-body">
+        <div class="step-desc">You are on Windows. Use PowerShell — CMD doesn't support <code>mkdir -p</code> syntax. Run each mkdir separately:</div>
+        <div class="code"><span class="cm"># Open PowerShell in your target folder</span>
+mkdir resume-agent
+cd resume-agent
+mkdir agents
+mkdir utils
+mkdir graph</div>
+        <div class="fix">❌ <strong>CMD error you hit:</strong> <code>mkdir agents utils graph</code> throws "positional parameter not found" in PowerShell. Run them one by one.</div>
+        <div class="tip">After running, type <code>dir</code> to confirm agents/, utils/, graph/ are all listed.</div>
+      </div>
+    </div>
+
+    <div class="step" onclick="toggle(this)">
+      <div class="step-header"><div class="step-num">2</div><div class="step-name">Create virtual environment named "resume" <span class="fix-badge">Name changed</span></div><div class="step-toggle">↓</div></div>
+      <div class="step-body">
+        <div class="step-desc">We named the environment <strong>resume</strong> (not the default "venv") for clarity.</div>
+        <div class="code">python -m venv resume
+
+<span class="cm"># Activate on Windows PowerShell:</span>
+resume\Scripts\activate</div>
+        <div class="ok">✅ You should see <code>(resume)</code> at the start of your terminal prompt after activation.</div>
+      </div>
+    </div>
+
+    <div class="step" onclick="toggle(this)">
+      <div class="step-header"><div class="step-num">3</div><div class="step-name">Create requirements.txt and install packages</div><div class="step-toggle">↓</div></div>
+      <div class="step-body">
+        <div class="step-desc">Create <code>requirements.txt</code> in VS Code, paste the packages below, then run pip install.</div>
+        <div class="code">streamlit
+langchain
+langchain-google-genai
+langchain-groq
+langchain-ollama
+langgraph
+anthropic
+google-generativeai
+groq
+pdfplumber
+python-docx
+httpx
+beautifulsoup4
+python-dotenv
+firecrawl-py</div>
+        <div class="code">pip install -r requirements.txt</div>
+        <div class="tip">⏱ Takes 3–5 mins. Run this before the workshop so students don't wait.</div>
+      </div>
+    </div>
+
+    <div class="step" onclick="toggle(this)">
+      <div class="step-header"><div class="step-num">4</div><div class="step-name">Create .env file — Groq is primary <span class="fix-badge">Groq not Gemini</span></div><div class="step-toggle">↓</div></div>
+      <div class="step-body">
+        <div class="step-desc">Create a <code>.env</code> file in the project root. We switched from Gemini to Groq because the Gemini free tier quota was exhausted.</div>
+        <div class="code">GROQ_API_KEY=your_groq_key_here
+<span class="cm"># Optional alternatives:</span>
+GEMINI_API_KEY=your_gemini_key_here
+FIRECRAWL_API_KEY=your_firecrawl_key_here</div>
+        <div class="info">Get free Groq key at <strong>console.groq.com</strong> → Sign up → API Keys → Create. No credit card needed.</div>
+        <div class="fix">❌ <strong>Gemini error hit:</strong> <code>gemini-1.5-flash is not found for API version v1beta</code> — model name changed to <code>gemini-2.0-flash</code>. But even with the fix, free tier quota was exhausted. Use Groq.</div>
+      </div>
+    </div>
+
+    <div class="step" onclick="toggle(this)">
+      <div class="step-header"><div class="step-num">5</div><div class="step-name">Create __init__.py files in all 3 folders</div><div class="step-toggle">↓</div></div>
+      <div class="step-body">
+        <div class="step-desc">In VS Code: right click each folder → New File → name it <code>__init__.py</code>. Leave all 3 files completely empty.</div>
+        <div class="code"><span class="cm"># Create these 3 empty files:</span>
+agents/__init__.py
+utils/__init__.py
+graph/__init__.py</div>
+        <div class="tip">Without these files, Python won't treat these folders as packages and imports will fail with ModuleNotFoundError.</div>
+      </div>
+    </div>
+
+    <div class="step" onclick="toggle(this)">
+      <div class="step-header"><div class="step-num">6</div><div class="step-name">Run test_setup.py — updated for Groq <span class="fix-badge">Groq version</span></div><div class="step-toggle">↓</div></div>
+      <div class="step-body">
+        <div class="filepath">resume-agent/test_setup.py</div>
+        <div class="code"><span class="kw">import</span> sys
+<span class="fn">print</span>(f<span class="st">"Python: {sys.version_info.major}.{sys.version_info.minor}"</span>)
+
+packages = [<span class="st">"streamlit"</span>,<span class="st">"langchain"</span>,<span class="st">"langgraph"</span>,
+            <span class="st">"pdfplumber"</span>,<span class="st">"docx"</span>,<span class="st">"httpx"</span>,<span class="st">"bs4"</span>,<span class="st">"dotenv"</span>,<span class="st">"groq"</span>]
+
+<span class="kw">for</span> pkg <span class="kw">in</span> packages:
+    <span class="kw">try</span>:
+        __import__(pkg)
+        <span class="fn">print</span>(f<span class="st">"  ✅ {pkg}"</span>)
+    <span class="kw">except</span> ImportError:
+        <span class="fn">print</span>(f<span class="st">"  ❌ {pkg}"</span>)
+
+<span class="kw">import</span> os
+<span class="kw">from</span> dotenv <span class="kw">import</span> load_dotenv
+load_dotenv()
+
+key = os.getenv(<span class="st">"GROQ_API_KEY"</span>)
+<span class="kw">if</span> key:
+    <span class="kw">from</span> groq <span class="kw">import</span> Groq
+    client = Groq(api_key=key)
+    r = client.chat.completions.create(
+        model=<span class="st">"llama-3.1-8b-instant"</span>,
+        messages=[{<span class="st">"role"</span>:<span class="st">"user"</span>,<span class="st">"content"</span>:<span class="st">"Say: Setup successful!"</span>}]
+    )
+    <span class="fn">print</span>(<span class="st">"✅ Groq API:"</span>, r.choices[0].message.content.strip())</div>
+        <div class="code">python test_setup.py
+
+<span class="cm"># Expected output:</span>
+<span class="ok">Python: 3.11
+  ✅ streamlit  ✅ langchain  ✅ langgraph
+  ✅ pdfplumber ✅ docx ✅ httpx ✅ bs4
+  ✅ dotenv     ✅ groq
+✅ Groq API: Setup successful!</span></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!-- PHASE 2 -->
+<!-- ══════════════════════════════════════════ -->
+<div class="phase-panel" id="phase-1">
+  <div class="phase-header"><span class="phase-tag">Phase 2</span><span class="phase-title">llm_config.py — Groq as default</span></div>
+  <div class="steps">
+
+    <div class="step" onclick="toggle(this)">
+      <div class="step-header"><div class="step-num">1</div><div class="step-name">Create llm_config.py — DEFAULT_PROVIDER = "groq" <span class="fix-badge">Updated</span></div><div class="step-toggle">↓</div></div>
+      <div class="step-body">
+        <div class="filepath">resume-agent/llm_config.py</div>
+        <div class="step-desc">Central LLM switcher. All 4 agents call <code>get_llm()</code>. Students change one line to switch providers.</div>
+        <div class="code"><span class="kw">import</span> os
+<span class="kw">from</span> dotenv <span class="kw">import</span> load_dotenv
+load_dotenv()
+
+<span class="cm"># ✏️ Change this to switch LLMs everywhere</span>
+<span class="cm"># Options: "groq" | "gemini" | "claude" | "ollama"</span>
+DEFAULT_PROVIDER = <span class="st">"groq"</span>
+
+<span class="kw">def</span> <span class="fn">get_llm</span>(provider=DEFAULT_PROVIDER):
+    <span class="kw">if</span> provider == <span class="st">"groq"</span>:
+        <span class="kw">from</span> langchain_groq <span class="kw">import</span> ChatGroq
+        <span class="kw">return</span> ChatGroq(
+            model=<span class="st">"llama-3.1-8b-instant"</span>,
+            api_key=os.getenv(<span class="st">"GROQ_API_KEY"</span>),
+            temperature=<span class="st">0.3</span>
+        )
+    <span class="kw">elif</span> provider == <span class="st">"gemini"</span>:
+        <span class="kw">from</span> langchain_google_genai <span class="kw">import</span> ChatGoogleGenerativeAI
+        <span class="kw">return</span> ChatGoogleGenerativeAI(
+            model=<span class="st">"gemini-2.0-flash"</span>,  <span class="cm"># ← updated model name</span>
+            google_api_key=os.getenv(<span class="st">"GEMINI_API_KEY"</span>),
+            temperature=<span class="st">0.3</span>
+        )
+    <span class="kw">elif</span> provider == <span class="st">"ollama"</span>:
+        <span class="kw">from</span> langchain_ollama <span class="kw">import</span> ChatOllama
+        <span class="kw">return</span> ChatOllama(model=<span class="st">"llama3.1"</span>, temperature=<span class="st">0.3</span>)</div>
+      </div>
+    </div>
+
+    <div class="step" onclick="toggle(this)">
+      <div class="step-header"><div class="step-num">2</div><div class="step-name">Test LLM connection — one-liner</div><div class="step-toggle">↓</div></div>
+      <div class="step-body">
+        <div class="step-desc">Quick smoke test directly in PowerShell without creating a file.</div>
+        <div class="code">python -c <span class="st">"from llm_config import get_llm; llm = get_llm(); print(llm.invoke('Say hello in one word').content)"</span>
+
+<span class="cm"># Expected: Hello!</span></div>
+        <div class="tip">The <code>-c</code> flag runs a string as Python code directly in the terminal. The response's <code>.content</code> extracts just the text from the LangChain AIMessage object.</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!-- PHASE 3 -->
+<!-- ══════════════════════════════════════════ -->
+<div class="phase-panel" id="phase-2">
+  <div class="phase-header"><span class="phase-tag">Phase 3</span><span class="phase-title">Utils — pdf_extractor, jd_scraper, resume_generator</span></div>
+  <div class="steps">
+
+    <div class="step" onclick="toggle(this)">
+      <div class="step-header"><div class="step-num">1</div><div class="step-name">utils/pdf_extractor.py</div><div class="step-toggle">↓</div></div>
+      <div class="step-body">
+        <div class="filepath">resume-agent/utils/pdf_extractor.py</div>
+        <div class="step-desc">Extracts text from PDF using pdfplumber and from DOCX using python-docx. Auto-detects file type by extension.</div>
+        <div class="code"><span class="kw">import</span> pdfplumber, docx, io
+
+<span class="kw">def</span> <span class="fn">extract_resume_text</span>(uploaded_file) -> str:
+    filename = uploaded_file.name.lower()
+    <span class="kw">if</span> filename.endswith(<span class="st">".pdf"</span>):
+        <span class="kw">with</span> pdfplumber.open(uploaded_file) <span class="kw">as</span> pdf:
+            <span class="kw">return</span> <span class="st">"\n"</span>.join(
+                p.extract_text() <span class="kw">for</span> p <span class="kw">in</span> pdf.pages <span class="kw">if</span> p.extract_text()
+            ).strip()
+    <span class="kw">elif</span> filename.endswith(<span class="st">".docx"</span>):
+        doc = docx.Document(io.BytesIO(uploaded_file.read()))
+        <span class="kw">return</span> <span class="st">"\n"</span>.join(
+            p.text <span class="kw">for</span> p <span class="kw">in</span> doc.paragraphs <span class="kw">if</span> p.text.strip()
+        ).strip()</div>
+        <div class="code">python -c <span class="st">"from utils.pdf_extractor import extract_resume_text; print('✅ pdf_extractor ok')"</span></div>
+      </div>
+    </div>
+
+    <div class="step" onclick="toggle(this)">
+      <div class="step-header"><div class="step-num">2</div><div class="step-name">utils/jd_scraper.py</div><div class="step-toggle">↓</div></div>
+      <div class="step-body">
+        <div class="filepath">resume-agent/utils/jd_scraper.py</div>
+        <div class="step-desc">Tries Firecrawl first (JS-heavy sites like LinkedIn). Falls back to httpx + BeautifulSoup for static pages. If both fail, tells user to paste JD manually.</div>
+        <div class="code"><span class="kw">def</span> <span class="fn">fetch_jd_from_url</span>(url: str) -> str:
+    <span class="kw">if</span> os.getenv(<span class="st">"FIRECRAWL_API_KEY"</span>):
+        <span class="kw">try</span>:
+            text = <span class="fn">scrape_with_firecrawl</span>(url)
+            <span class="kw">if</span> text <span class="kw">and</span> len(text) > <span class="st">200</span>:
+                <span class="kw">return</span> text
+        <span class="kw">except</span>:
+            <span class="kw">pass</span>  <span class="cm"># Fall through to httpx</span>
+    <span class="kw">return</span> <span class="fn">scrape_with_httpx</span>(url)</div>
+        <div class="tip">If students don't have a Firecrawl key, they can use the "Paste JD directly" option in the Streamlit UI. The app handles both modes.</div>
+      </div>
+    </div>
+
+    <div class="step" onclick="toggle(this)">
+      <div class="step-header"><div class="step-num">3</div><div class="step-name">utils/resume_generator.py <span class="warn-badge">Don't forget this!</span></div><div class="step-toggle">↓</div></div>
+      <div class="step-body">
+        <div class="filepath">resume-agent/utils/resume_generator.py</div>
+        <div class="step-desc">Converts Agent 4's text output into a downloadable .docx file. This file was initially missed and caused the Streamlit app to crash with <code>ModuleNotFoundError: No module named 'utils.resume_generator'</code>.</div>
+        <div class="code"><span class="kw">import</span> io
+<span class="kw">from</span> docx <span class="kw">import</span> Document
+<span class="kw">from</span> docx.shared <span class="kw">import</span> Pt, RGBColor
+<span class="kw">from</span> docx.enum.text <span class="kw">import</span> WD_ALIGN_PARAGRAPH
+
+<span class="kw">def</span> <span class="fn">generate_resume_docx</span>(resume_text: str) -> bytes:
+    doc = Document()
+    <span class="cm"># Set narrow margins for resume</span>
+    <span class="kw">for</span> section <span class="kw">in</span> doc.sections:
+        section.top_margin = Pt(<span class="st">36</span>)
+        section.left_margin = Pt(<span class="st">54</span>)
+        section.right_margin = Pt(<span class="st">54</span>)
+    <span class="cm"># Parse lines and format headings, bullets, body text</span>
+    <span class="cm"># Returns bytes for st.download_button()</span>
+    buffer = io.BytesIO()
+    doc.save(buffer)
+    buffer.seek(<span class="st">0</span>)
+    <span class="kw">return</span> buffer.read()</div>
+        <div class="fix">❌ <strong>Error hit:</strong> <code>ModuleNotFoundError: No module named 'utils.resume_generator'</code> — this file was not created initially. Always create all 3 util files before running the app.</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!-- PHASE 4 -->
+<!-- ══════════════════════════════════════════ -->
+<div class="phase-panel" id="phase-3">
+  <div class="phase-header"><span class="phase-tag">Phase 4</span><span class="phase-title">Agent 1 — JD Parser</span></div>
+  <div class="steps">
+
+    <div class="step" onclick="toggle(this)">
+      <div class="step-header"><div class="step-num">1</div><div class="step-name">Create agents/jd_parser.py — fix import path <span class="fix-badge">Import fixed</span></div><div class="step-toggle">↓</div></div>
+      <div class="step-body">
+        <div class="filepath">resume-agent/agents/jd_parser.py</div>
+        <div class="step-desc">Takes raw JD text and returns structured JSON with role, skills, keywords, responsibilities.</div>
+        <div class="fix">❌ <strong>Error hit:</strong> <code>ModuleNotFoundError: No module named 'langchain.prompts'</code><br>
+        The import path changed in newer LangChain versions. Always use <code>langchain_core</code> not <code>langchain</code>.</div>
+        <div class="code"><span class="cm"># ❌ WRONG — old path, throws ModuleNotFoundError</span>
+<span class="kw">from</span> langchain.prompts <span class="kw">import</span> PromptTemplate
+
+<span class="cm"># ✅ CORRECT — use langchain_core</span>
+<span class="kw">from</span> langchain_core.prompts <span class="kw">import</span> PromptTemplate
+<span class="kw">from</span> langchain_core.output_parsers <span class="kw">import</span> StrOutputParser</div>
+        <div class="code"><span class="cm"># The LCEL chain pattern used in ALL agents:</span>
+chain = PARSER_PROMPT | llm | StrOutputParser()
+raw_output = chain.invoke({<span class="st">"jd_text"</span>: jd_text})
+
+<span class="cm"># Always strip markdown fences before json.loads():</span>
+<span class="kw">import</span> re, json
+cleaned = re.sub(<span class="st">r"```json|```"</span>, <span class="st">""</span>, raw_output).strip()
+<span class="kw">return</span> json.loads(cleaned)</div>
+      </div>
+    </div>
+
+    <div class="step" onclick="toggle(this)">
+      <div class="step-header"><div class="step-num">2</div><div class="step-name">Test Agent 1 with test_agent1.py</div><div class="step-toggle">↓</div></div>
+      <div class="step-body">
+        <div class="filepath">resume-agent/test_agent1.py</div>
+        <div class="step-desc">Always test each agent in isolation before connecting to LangGraph.</div>
+        <div class="code"><span class="kw">from</span> agents.jd_parser <span class="kw">import</span> parse_jd
+<span class="kw">import</span> json
+
+sample_jd = <span class="st">"""
+We are looking for a Data Scientist with 3+ years experience.
+Required: Python, Machine Learning, SQL, TensorFlow, Docker.
+Preferred: AWS, Spark, Kubernetes.
+"""</span>
+
+result = parse_jd(sample_jd)
+<span class="fn">print</span>(json.dumps(result, indent=<span class="st">2</span>))</div>
+        <div class="code">python test_agent1.py</div>
+        <div class="ok">✅ Verified output: role, required_skills, preferred_skills, keywords, responsibilities all extracted correctly.</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!-- PHASE 5 -->
+<!-- ══════════════════════════════════════════ -->
+<div class="phase-panel" id="phase-4">
+  <div class="phase-header"><span class="phase-tag">Phase 5</span><span class="phase-title">Agent 2 & 3 — Evaluator & Gap Analyst</span></div>
+  <div class="steps">
+
+    <div class="step" onclick="toggle(this)">
+      <div class="step-header"><div class="step-num">1</div><div class="step-name">Create agents/resume_evaluator.py (Agent 2)</div><div class="step-toggle">↓</div></div>
+      <div class="step-body">
+        <div class="filepath">resume-agent/agents/resume_evaluator.py</div>
+        <div class="step-desc">Takes resume text + parsed JD from Agent 1. Scores resume out of 10 across 5 dimensions. Uses same langchain_core import pattern.</div>
+        <div class="code"><span class="kw">from</span> langchain_core.prompts <span class="kw">import</span> PromptTemplate  <span class="cm"># ← always langchain_core</span>
+<span class="kw">from</span> langchain_core.output_parsers <span class="kw">import</span> StrOutputParser
+
+<span class="kw">def</span> <span class="fn">evaluate_resume</span>(resume_text: str, parsed_jd: dict) -> dict:
+    chain = EVALUATOR_PROMPT | llm | StrOutputParser()
+    raw = chain.invoke({
+        <span class="st">"resume_text"</span>: resume_text,
+        <span class="st">"parsed_jd"</span>: json.dumps(parsed_jd, indent=<span class="st">2</span>)
+    })
+    <span class="kw">return</span> json.loads(re.sub(<span class="st">r"```json|```"</span>, <span class="st">""</span>, raw).strip())</div>
+        <div class="tip">Agent 2 takes TWO inputs — resume text and the parsed JD dict. Convert the dict to string with json.dumps() before sending to LLM.</div>
+      </div>
+    </div>
+
+    <div class="step" onclick="toggle(this)">
+      <div class="step-header"><div class="step-num">2</div><div class="step-name">Create agents/gap_analyst.py (Agent 3)</div><div class="step-toggle">↓</div></div>
+      <div class="step-body">
+        <div class="filepath">resume-agent/agents/gap_analyst.py</div>
+        <div class="step-desc">Takes THREE inputs — resume, parsed JD, and evaluation. Returns critical gaps, what the company wants, and 3 project suggestions.</div>
+        <div class="code"><span class="kw">def</span> <span class="fn">analyze_gaps</span>(resume_text, parsed_jd, evaluation) -> dict:
+    chain = GAP_ANALYST_PROMPT | llm | StrOutputParser()
+    raw = chain.invoke({
+        <span class="st">"resume_text"</span>: resume_text,
+        <span class="st">"parsed_jd"</span>: json.dumps(parsed_jd, indent=<span class="st">2</span>),
+        <span class="st">"evaluation"</span>: json.dumps(evaluation, indent=<span class="st">2</span>)
+    })
+    <span class="kw">return</span> json.loads(re.sub(<span class="st">r"```json|```"</span>, <span class="st">""</span>, raw).strip())
+
+<span class="cm"># Returns dict with these keys:</span>
+<span class="cm"># "what_they_want", "critical_gaps",</span>
+<span class="cm"># "suggested_projects", "quick_wins"</span></div>
+        <div class="tip"><strong>Teaching moment:</strong> Agent 3 receives outputs from Agent 1 AND Agent 2. This is chained reasoning — each agent builds on all previous agents' work.</div>
+      </div>
+    </div>
+
+    <div class="step" onclick="toggle(this)">
+      <div class="step-header"><div class="step-num">3</div><div class="step-name">Test Agents 2 & 3 with test_agent2.py and test_agent3.py</div><div class="step-toggle">↓</div></div>
+      <div class="step-body">
+        <div class="step-desc">Chain all 3 agents manually before LangGraph — use output of each agent as input to the next.</div>
+        <div class="code"><span class="cm"># test_agent3.py — chain all 3 in sequence</span>
+<span class="kw">from</span> agents.jd_parser <span class="kw">import</span> parse_jd
+<span class="kw">from</span> agents.resume_evaluator <span class="kw">import</span> evaluate_resume
+<span class="kw">from</span> agents.gap_analyst <span class="kw">import</span> analyze_gaps
+
+parsed_jd  = parse_jd(sample_jd)
+evaluation = evaluate_resume(sample_resume, parsed_jd)
+gaps       = analyze_gaps(sample_resume, parsed_jd, evaluation)
+
+<span class="fn">print</span>(<span class="st">"Gap analysis keys:"</span>, list(gaps.keys()))
+<span class="cm"># Expected: ['what_they_want', 'critical_gaps',</span>
+<span class="cm">#            'suggested_projects', 'quick_wins']</span></div>
+        <div class="ok">✅ Verified: 5 critical gaps found, 3 project suggestions returned, all correct keys present.</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!-- PHASE 6 -->
+<!-- ══════════════════════════════════════════ -->
+<div class="phase-panel" id="phase-5">
+  <div class="phase-header"><span class="phase-tag">Phase 6</span><span class="phase-title">Agent 4 — Resume Writer</span></div>
+  <div class="steps">
+
+    <div class="step" onclick="toggle(this)">
+      <div class="step-header"><div class="step-num">1</div><div class="step-name">Create agents/resume_writer.py with anti-hallucination rules <span class="fix-badge">Extra rules added</span></div><div class="step-toggle">↓</div></div>
+      <div class="step-body">
+        <div class="filepath">resume-agent/agents/resume_writer.py</div>
+        <div class="step-desc">Takes ALL previous agent outputs. Rewrites resume aligned with JD. Extra rules added to prevent LLM fabricating credentials.</div>
+        <div class="fix">❌ <strong>Hallucination observed:</strong> Agent 4 added <code>Certified Data Scientist — DASCA (2022)</code> which was not in the original resume. Fixed by adding explicit rules to the prompt.</div>
+        <div class="code"><span class="cm"># STRICT RULES added to prompt:</span>
+<span class="st">"""
+STRICT RULES — follow these exactly:
+1. Do NOT fabricate companies or job roles
+2. Keep candidate's real experience — only rephrase
+3. Naturally include JD keywords in bullet points
+4. Add metrics to every bullet point where possible
+5. Use strong action verbs: Built, Deployed, Optimized
+6. If INCLUDE SUGGESTED PROJECTS is True, add them
+7. Put most relevant experience FIRST
+8. Do NOT add certifications unless in original resume
+9. Do NOT add phone/LinkedIn unless in original resume
+"""</span></div>
+        <div class="code"><span class="kw">def</span> <span class="fn">write_resume</span>(resume_text, parsed_jd, evaluation,
+               gap_analysis, include_suggested_projects=<span class="kw">True</span>) -> str:
+    chain = WRITER_PROMPT | llm | StrOutputParser()
+    <span class="kw">return</span> chain.invoke({
+        <span class="st">"resume_text"</span>: resume_text,
+        <span class="st">"parsed_jd"</span>: json.dumps(parsed_jd, indent=<span class="st">2</span>),
+        <span class="st">"evaluation"</span>: json.dumps(evaluation, indent=<span class="st">2</span>),
+        <span class="st">"gap_analysis"</span>: json.dumps(gap_analysis, indent=<span class="st">2</span>),
+        <span class="st">"include_suggested_projects"</span>: str(include_suggested_projects)
+    }).strip()</div>
+        <div class="tip"><strong>Key difference:</strong> Agent 4 returns a plain string (not a dict). This gets passed directly to resume_generator.py to become a DOCX file.</div>
+      </div>
+    </div>
+
+    <div class="step" onclick="toggle(this)">
+      <div class="step-header"><div class="step-num">2</div><div class="step-name">Test all 4 agents with test_agent4.py</div><div class="step-toggle">↓</div></div>
+      <div class="step-body">
+        <div class="filepath">resume-agent/test_agent4.py</div>
+        <div class="code"><span class="kw">from</span> agents.resume_writer <span class="kw">import</span> write_resume
+
+final = write_resume(
+    resume_text=sample_resume,
+    parsed_jd=parsed_jd,
+    evaluation=evaluation,
+    gap_analysis=gaps,
+    include_suggested_projects=<span class="kw">True</span>
+)
+
+<span class="cm"># Save output to text file for easy reading</span>
+<span class="kw">with</span> <span class="fn">open</span>(<span class="st">"final_resume_output.txt"</span>, <span class="st">"w"</span>) <span class="kw">as</span> f:
+    f.write(final)
+<span class="fn">print</span>(<span class="st">"📄 Saved to final_resume_output.txt"</span>)</div>
+        <div class="code">python test_agent4.py</div>
+        <div class="ok">✅ Verified: Final resume saved to txt file. Open in VS Code to review the full output.</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!-- PHASE 7 -->
+<!-- ══════════════════════════════════════════ -->
+<div class="phase-panel" id="phase-6">
+  <div class="phase-header"><span class="phase-tag">Phase 7</span><span class="phase-title">LangGraph Pipeline</span></div>
+  <div class="steps">
+
+    <div class="step" onclick="toggle(this)">
+      <div class="step-header"><div class="step-num">1</div><div class="step-name">Create graph/pipeline.py — ResumeState TypedDict</div><div class="step-toggle">↓</div></div>
+      <div class="step-body">
+        <div class="filepath">resume-agent/graph/pipeline.py</div>
+        <div class="step-desc">The shared state dict that flows through all 4 agents. Each agent reads from it and adds its output.</div>
+        <div class="code"><span class="kw">from</span> typing <span class="kw">import</span> TypedDict, Optional
+<span class="kw">from</span> langgraph.graph <span class="kw">import</span> StateGraph, END
+
+<span class="kw">class</span> <span class="fn">ResumeState</span>(TypedDict):
+    resume_text: str
+    jd_text: str
+    include_suggested_projects: bool
+    parsed_jd: Optional[dict]      <span class="cm"># Agent 1 fills this</span>
+    evaluation: Optional[dict]     <span class="cm"># Agent 2 fills this</span>
+    gap_analysis: Optional[dict]   <span class="cm"># Agent 3 fills this</span>
+    final_resume: Optional[str]    <span class="cm"># Agent 4 fills this</span>
+    current_step: Optional[str]
+    error: Optional[str]</div>
+        <div class="tip"><strong>Teaching moment:</strong> The <code>{**state, "parsed_jd": parsed}</code> pattern spreads all existing keys and adds only the new one. This is how state grows richer at every step without losing previous outputs.</div>
+      </div>
+    </div>
+
+    <div class="step" onclick="toggle(this)">
+      <div class="step-header"><div class="step-num">2</div><div class="step-name">Build and compile StateGraph</div><div class="step-toggle">↓</div></div>
+      <div class="step-body">
+        <div class="code"><span class="kw">def</span> <span class="fn">build_pipeline</span>():
+    graph = StateGraph(ResumeState)
+
+    graph.add_node(<span class="st">"jd_parser"</span>,   jd_parser_node)
+    graph.add_node(<span class="st">"evaluator"</span>,    evaluator_node)
+    graph.add_node(<span class="st">"gap_analyst"</span>,  gap_analyst_node)
+    graph.add_node(<span class="st">"writer"</span>,       writer_node)
+
+    graph.set_entry_point(<span class="st">"jd_parser"</span>)
+    graph.add_edge(<span class="st">"jd_parser"</span>,  <span class="st">"evaluator"</span>)
+    graph.add_edge(<span class="st">"evaluator"</span>,   <span class="st">"gap_analyst"</span>)
+    graph.add_edge(<span class="st">"gap_analyst"</span>, <span class="st">"writer"</span>)
+    graph.add_edge(<span class="st">"writer"</span>,      END)
+
+    <span class="kw">return</span> graph.compile()
+
+<span class="kw">def</span> <span class="fn">run_pipeline</span>(resume_text, jd_text,
+               include_suggested_projects=<span class="kw">True</span>) -> ResumeState:
+    pipeline = build_pipeline()
+    <span class="kw">return</span> pipeline.invoke({
+        <span class="st">"resume_text"</span>: resume_text,
+        <span class="st">"jd_text"</span>: jd_text,
+        <span class="st">"include_suggested_projects"</span>: include_suggested_projects,
+        <span class="st">"parsed_jd"</span>: <span class="kw">None</span>, <span class="st">"evaluation"</span>: <span class="kw">None</span>,
+        <span class="st">"gap_analysis"</span>: <span class="kw">None</span>, <span class="st">"final_resume"</span>: <span class="kw">None</span>,
+        <span class="st">"current_step"</span>: <span class="st">"starting"</span>, <span class="st">"error"</span>: <span class="kw">None</span>
+    })</div>
+      </div>
+    </div>
+
+    <div class="step" onclick="toggle(this)">
+      <div class="step-header"><div class="step-num">3</div><div class="step-name">Test with test_pipeline.py — check correct dict keys</div><div class="step-toggle">↓</div></div>
+      <div class="step-body">
+        <div class="filepath">resume-agent/test_pipeline.py</div>
+        <div class="fix">❌ <strong>Issue hit:</strong> <code>Gaps found: 0</code> even though gaps existed. Cause: wrong dict key used. Always print <code>list(result['gap_analysis'].keys())</code> first to verify key names before accessing them.</div>
+        <div class="code">result = run_pipeline(sample_resume, sample_jd)
+
+<span class="cm"># ✅ Correct key names confirmed:</span>
+<span class="fn">print</span>(list(result[<span class="st">'gap_analysis'</span>].keys()))
+<span class="cm"># ['what_they_want', 'critical_gaps', 'suggested_projects', 'quick_wins']</span>
+
+<span class="fn">print</span>(f<span class="st">"Role: {result['parsed_jd']['role']}"</span>)
+<span class="fn">print</span>(f<span class="st">"Score: {result['evaluation']['overall_score']}/10"</span>)
+<span class="fn">print</span>(f<span class="st">"Gaps: {len(result['gap_analysis']['critical_gaps'])}"</span>)
+<span class="fn">print</span>(f<span class="st">"Projects: {len(result['gap_analysis']['suggested_projects'])}"</span>)</div>
+        <div class="ok">✅ Verified output:
+Role: Data Scientist · Score: 6/10 · Gaps: 5 · Projects: 3 · Status: done</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!-- PHASE 8 -->
+<!-- ══════════════════════════════════════════ -->
+<div class="phase-panel" id="phase-7">
+  <div class="phase-header"><span class="phase-tag">Phase 8</span><span class="phase-title">Streamlit UI — app1.py (styled)</span></div>
+  <div class="steps">
+
+    <div class="step" onclick="toggle(this)">
+      <div class="step-header"><div class="step-num">1</div><div class="step-name">Create app1.py — NOT app.py <span class="new-badge">Styled version</span></div><div class="step-toggle">↓</div></div>
+      <div class="step-body">
+        <div class="filepath">resume-agent/app1.py</div>
+        <div class="step-desc">The final styled Streamlit app with white cards, tag pills, gap cards, project cards matching the HTML mockup. We use <code>app1.py</code> not <code>app.py</code> so both versions can coexist.</div>
+        <div class="code"><span class="cm"># CRITICAL: Add these 3 lines at the very top of app1.py</span>
+<span class="cm"># BEFORE any other imports — fixes module path issues on Windows</span>
+<span class="kw">import</span> sys, os
+sys.path.insert(<span class="st">0</span>, os.path.dirname(os.path.abspath(__file__)))
+
+<span class="kw">import</span> streamlit <span class="kw">as</span> st
+<span class="kw">from</span> utils.pdf_extractor <span class="kw">import</span> extract_resume_text
+<span class="kw">from</span> utils.jd_scraper <span class="kw">import</span> fetch_jd_from_url
+<span class="kw">from</span> utils.resume_generator <span class="kw">import</span> generate_resume_docx
+<span class="kw">from</span> graph.pipeline <span class="kw">import</span> run_pipeline</div>
+        <div class="fix">❌ <strong>Error hit:</strong> <code>ModuleNotFoundError: No module named 'utils.resume_generator'</code> when running <code>streamlit run app.py</code>. Fix: add the <code>sys.path.insert()</code> lines at the top so Streamlit can find local modules.</div>
+      </div>
+    </div>
+
+    <div class="step" onclick="toggle(this)">
+      <div class="step-header"><div class="step-num">2</div><div class="step-name">Session state — critical for 5-tab layout</div><div class="step-toggle">↓</div></div>
+      <div class="step-body">
+        <div class="step-desc">Session state persists data when the user switches between tabs. Without it, switching tabs clears all results.</div>
+        <div class="code"><span class="cm"># Initialize session state at top of app1.py</span>
+<span class="kw">if</span> <span class="st">"pipeline_result"</span> <span class="kw">not in</span> st.session_state:
+    st.session_state.pipeline_result = <span class="kw">None</span>
+<span class="kw">if</span> <span class="st">"resume_text"</span> <span class="kw">not in</span> st.session_state:
+    st.session_state.resume_text = <span class="st">""</span>
+<span class="kw">if</span> <span class="st">"jd_text"</span> <span class="kw">not in</span> st.session_state:
+    st.session_state.jd_text = <span class="st">""</span>
+
+<span class="cm"># 5 tabs</span>
+tab1, tab2, tab3, tab4, tab5 = st.tabs([
+    <span class="st">"📥 Input"</span>, <span class="st">"🔍 JD Analysis"</span>,
+    <span class="st">"⭐ Score Card"</span>, <span class="st">"💡 Suggestions"</span>,
+    <span class="st">"✅ Final Resume"</span>
+])</div>
+        <div class="tip"><strong>Teaching moment:</strong> Show students what happens WITHOUT session_state first — switching tabs clears results. Then fix it live.</div>
+      </div>
+    </div>
+
+    <div class="step" onclick="toggle(this)">
+      <div class="step-header"><div class="step-num">3</div><div class="step-name">Tab 1 — Input with readiness check and pipeline trigger</div><div class="step-toggle">↓</div></div>
+      <div class="step-body">
+        <div class="code"><span class="kw">with</span> tab1:
+    uploaded = st.file_uploader(<span class="st">"Resume"</span>, type=[<span class="st">"pdf"</span>,<span class="st">"docx"</span>])
+    <span class="kw">if</span> uploaded:
+        st.session_state.resume_text = extract_resume_text(uploaded)
+
+    role = st.text_input(<span class="st">"Target role"</span>)
+
+    <span class="cm"># JD — URL or paste</span>
+    mode = st.radio(<span class="st">"JD input"</span>, [<span class="st">"🔗 URL"</span>, <span class="st">"📋 Paste"</span>], horizontal=<span class="kw">True</span>)
+
+    ready = (st.session_state.resume_text
+             <span class="kw">and</span> st.session_state.jd_text <span class="kw">and</span> role)
+
+    <span class="kw">if</span> st.button(<span class="st">"🚀 Analyze & Build"</span>,
+                  disabled=<span class="kw">not</span> ready, type=<span class="st">"primary"</span>,
+                  use_container_width=<span class="kw">True</span>):
+        <span class="kw">with</span> st.status(<span class="st">"Running agents..."</span>) <span class="kw">as</span> s:
+            result = run_pipeline(
+                st.session_state.resume_text,
+                st.session_state.jd_text
+            )
+            st.session_state.pipeline_result = result
+            s.update(label=<span class="st">"✅ Done!"</span>, state=<span class="st">"complete"</span>)</div>
+      </div>
+    </div>
+
+    <div class="step" onclick="toggle(this)">
+      <div class="step-header"><div class="step-num">4</div><div class="step-name">Tabs 2–5 — Display agent outputs + DOCX download</div><div class="step-toggle">↓</div></div>
+      <div class="step-body">
+        <div class="code"><span class="kw">with</span> tab5:
+    result = st.session_state.pipeline_result
+    <span class="kw">if</span> result:
+        final = result[<span class="st">"final_resume"</span>]
+        docx_bytes = generate_resume_docx(final)
+
+        st.download_button(
+            label=<span class="st">"⬇ Download as DOCX"</span>,
+            data=docx_bytes,
+            file_name=<span class="st">"tailored_resume.docx"</span>,
+            mime=<span class="st">"application/vnd.openxmlformats-officedocument"</span>
+                 <span class="st">".wordprocessingml.document"</span>
+        )
+        st.text_area(<span class="st">"Resume Preview"</span>, final, height=<span class="st">600</span>)</div>
+      </div>
+    </div>
+
+    <div class="step" onclick="toggle(this)">
+      <div class="step-header"><div class="step-num">5</div><div class="step-name">Run the app</div><div class="step-toggle">↓</div></div>
+      <div class="step-body">
+        <div class="code">streamlit run app1.py
+
+<span class="cm"># Opens at: http://localhost:8501</span></div>
+        <div class="ok">✅ App runs successfully. All 5 tabs working. DOCX download verified.</div>
+        <ul class="checklist" style="margin-top:10px">
+          <li>Upload your own resume PDF in Tab 1</li>
+          <li>Enter a real job title and paste a JD</li>
+          <li>Click Analyze & Build — watch all 4 agents run live</li>
+          <li>Check each tab for results</li>
+          <li>Download DOCX from Tab 5</li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Final file structure -->
+<div style="margin-top:32px;background:#fff;border:1px solid #e5e3db;border-radius:12px;padding:20px 24px">
+  <div style="font-size:14px;font-weight:500;margin-bottom:12px">Final project structure</div>
+  <div class="code" style="margin:0">resume-agent/
+├── agents/
+│   ├── __init__.py
+│   ├── jd_parser.py          <span class="ok">✅</span>  import from langchain_core
+│   ├── resume_evaluator.py   <span class="ok">✅</span>
+│   ├── gap_analyst.py        <span class="ok">✅</span>
+│   └── resume_writer.py      <span class="ok">✅</span>  anti-hallucination rules added
+├── utils/
+│   ├── __init__.py
+│   ├── pdf_extractor.py      <span class="ok">✅</span>
+│   ├── jd_scraper.py         <span class="ok">✅</span>
+│   └── resume_generator.py   <span class="ok">✅</span>  don't forget this one!
+├── graph/
+│   ├── __init__.py
+│   └── pipeline.py           <span class="ok">✅</span>
+├── resume/                        virtual environment (named resume)
+├── .env                           GROQ_API_KEY=...
+├── llm_config.py             <span class="ok">✅</span>  DEFAULT_PROVIDER = "groq"
+├── app1.py                   <span class="ok">✅</span>  sys.path.insert fix at top
+├── test_setup.py
+├── test_agent1.py
+├── test_agent2.py
+├── test_agent3.py
+├── test_agent4.py
+└── test_pipeline.py</div>
+</div>
+
+</div>
+
+<script>
+  function toggle(step) { step.classList.toggle('open'); }
+  function showPhase(idx, btn) {
+    document.querySelectorAll('.phase-panel').forEach((p,i) => p.classList.toggle('active', i===idx));
+    document.querySelectorAll('.pill').forEach((b,i) => b.classList.toggle('active', i===idx));
+  }
+</script>
+</body>
+</html>
