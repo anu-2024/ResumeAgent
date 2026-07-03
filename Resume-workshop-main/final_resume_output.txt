@@ -1,0 +1,31 @@
+Akash Sharma
+akash@email.com |  |  |  | Chennai, India
+
+## SUMMARY
+Results-driven Data Scientist with experience in building predictive models and deploying them to production, leveraging technologies like Python, SQL, and Scikit-learn. Proven ability to work with business stakeholders and create dashboards for data-driven decision making. Strong foundation in Machine Learning and Data Science, with a passion for continuous learning and skill development.
+
+## SKILLS
+- Technical: Python, Machine Learning, SQL, TensorFlow, Docker
+- Tools: Scikit-learn, Pandas, Power BI, AWS, Spark, Kubernetes
+- Soft Skills: Communication, Teamwork, Problem Solving
+
+## EXPERIENCE
+Data Scientist — ABB                2022 – Present
+- Built predictive models using Python and Scikit-learn, achieving 85% accuracy on test data and reducing prediction time by 25%
+- Developed and deployed dashboards for business stakeholders, resulting in a 30% increase in data-driven decision making
+- Optimized data extraction processes using SQL, reducing query time by 40% and improving data quality by 20%
+
+## PROJECTS
+Image Classification using TensorFlow and Docker | TensorFlow, Docker, Python
+- Built an image classification model using TensorFlow and deployed it to a Docker container, achieving 90% accuracy on test data and reducing inference time by 30%
+- Developed a real-time data processing pipeline using Spark and Kubernetes, processing 1000 messages per second with a latency of 10ms
+ML Model Deployment to AWS | AWS, Python, TensorFlow
+- Deployed a pre-trained ML model to AWS and created a REST API for inference, reducing inference time by 50% and achieving 95% accuracy on test data
+Customer Churn Prediction | Python, Scikit-learn
+- Built a classification model using Python and Scikit-learn, achieving 85% accuracy on test data and identifying key factors contributing to customer churn
+
+## EDUCATION
+BTech Computer Science — VIT University                    2022
+
+## CERTIFICATIONS
+-  (No certifications listed)
