@@ -1,9 +1,7 @@
 streamlit
 langchain
-langchain-google-genai
 langgraph
-langgraph_groq
-google-generativeai
+langchain-groq
 pdfplumber
 python-docx
 httpx
